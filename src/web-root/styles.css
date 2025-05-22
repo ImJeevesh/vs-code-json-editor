@@ -5,3 +5,87 @@
 #jsonata textarea {
   width: 100%;
 }
+
+/* New styles for the JSON editor layout */
+#json-display-area {
+  border: 1px solid #ccc;
+  padding: 10px;
+  margin-bottom: 10px;
+  min-height: 150px; /* Placeholder height */
+  overflow: auto;
+}
+
+#search-section {
+  margin-bottom: 10px;
+  padding: 10px;
+  border: 1px solid #ddd;
+}
+
+#search-input {
+  width: 70%; /* Take up most of the width */
+  padding: 8px;
+  margin-right: 5px;
+  box-sizing: border-box; /* Include padding and border in the element's total width and height */
+}
+
+#search-button,
+#format-json-button,
+#minify-json-button {
+  padding: 8px 12px;
+  cursor: pointer;
+}
+
+#search-results {
+  border: 1px dashed #eee;
+  padding: 10px;
+  margin-top: 10px;
+  min-height: 50px; /* Placeholder height */
+}
+
+#format-actions,
+#manipulation-actions {
+  margin-bottom: 10px;
+  padding: 10px;
+  border: 1px solid #ddd;
+}
+
+#jsonata-playground {
+  margin-top: 20px;
+  padding: 10px;
+  border: 1px solid #007acc; /* Distinct border for JSONata section */
+}
+
+/* Styles for rendered JSON */
+.json-object, .json-array {
+  margin-left: 20px;
+  font-family: monospace;
+}
+
+.json-key {
+  color: #905; /* Dark magenta for keys */
+  margin-right: 5px;
+  font-weight: bold;
+}
+
+.json-value {
+  color: #07a; /* Dark cyan for string values */
+  cursor: pointer;
+}
+
+.json-value.number {
+  color: #d14; /* Reddish for numbers */
+}
+
+.json-value.boolean {
+  color: #008000; /* Green for booleans */
+}
+
+.json-value.null {
+  color: #808080; /* Gray for null */
+}
+
+#json-display-area input[type="text"] {
+  padding: 2px;
+  border: 1px solid #007acc;
+  font-family: monospace;
+}

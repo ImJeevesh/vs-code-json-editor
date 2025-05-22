@@ -74,6 +74,90 @@ export class CodeJsonWebProvider implements vscode.WebviewViewProvider {
       case 'get-initial-json':
         this.refreshJson();
         break;
+      case 'execute-command':
+        if (data.arguments && data.arguments.length > 0) {
+          const commandId = data.arguments[0] as string;
+          vscode.commands.executeCommand(commandId);
+        }
+        break;
+      case 'edit-json-value':
+        if (!this._textEditor) {
+          vscode.window.showErrorMessage('No active JSON editor to apply changes to.');
+          return;
+        }
+        if (!data.payload || data.payload.path === undefined || data.payload.newValue === undefined) {
+          vscode.window.showErrorMessage('Invalid payload for JSON edit.');
+          return;
+        }
+
+        try {
+          const documentText = this._textEditor.document.getText();
+          const pathSegments = data.payload.path as parser.JSONPath; // data.payload.path is already an array
+          let parsedNewValue: any;
+
+          try {
+            parsedNewValue = JSON.parse(data.payload.newValue as string);
+          } catch (e) {
+            // If parsing fails (e.g., for a raw string like "hello" vs "\"hello\""),
+            // treat it as a literal string.
+            parsedNewValue = data.payload.newValue as string;
+          }
+
+          // Determine editor's indentation settings for formattingOptions
+          const editorOptions = vscode.window.activeTextEditor?.options;
+          const insertSpaces = editorOptions?.insertSpaces as boolean ?? true; // Default to true if undefined
+          const tabSize = editorOptions?.tabSize as number ?? 2; // Default to 2 if undefined
+
+
+          const edits = parser.modify(
+            documentText,
+            pathSegments,
+            parsedNewValue,
+            {
+              formattingOptions: {
+                insertSpaces: insertSpaces,
+                tabSize: tabSize,
+                // insertFinalNewline: vscode.workspace.getConfiguration('files').get('insertFinalNewline') || false, // Example
+              }
+            }
+          );
+
+          if (edits.length === 0) {
+            // This can happen if the value is identical to what's already there.
+            // No actual edit is needed.
+            console.log('No changes detected for JSON edit.');
+            // Optionally, still refresh the webview if the internal state might be out of sync
+            // or if the user experience benefits from a confirmation, though usually not needed here.
+            // this.refreshJson(); // Might be redundant
+            return;
+          }
+
+          const updatedText = parser.applyEdits(documentText, edits);
+
+          const document = this._textEditor.document;
+          const firstLine = document.lineAt(0);
+          const lastLine = document.lineAt(document.lineCount - 1);
+          const fullRange = new vscode.Range(firstLine.range.start, lastLine.range.end);
+
+          this._textEditor.edit(editBuilder => {
+            editBuilder.replace(fullRange, updatedText);
+          }).then(success => {
+            if (success) {
+              console.log('JSON edit applied successfully.');
+              // this.refreshJson(); // This should be triggered by onDidChangeTextDocument
+            } else {
+              vscode.window.showErrorMessage('Failed to apply JSON edit to the document.');
+            }
+          }, (error) => {
+            console.error('Error applying edit:', error);
+            vscode.window.showErrorMessage(`Error applying JSON edit: ${error.message || error}`);
+          });
+
+        } catch (error) {
+          console.error('Failed to process JSON edit:', error);
+          vscode.window.showErrorMessage(`Failed to process JSON edit: ${error.message || error}`);
+        }
+        break;
     }
   }
 
@@ -112,10 +196,25 @@ export class CodeJsonWebProvider implements vscode.WebviewViewProvider {
 			<body>
         <div id="app">
           <h5>Under Development!</h5>
-          <div id="jsonata">
-            <textarea id="jsonata-expression">webapp</textarea>
-            <button id="jsonata-evaluate-btn">Evaluate</button>
-            <pre id="jsonata-result"></pre>
+          <div id="json-display-area"></div>
+          <div id="search-section">
+            <input type="text" id="search-input" placeholder="JSONPath or JSONata query..."/>
+            <button id="search-button">Search</button>
+            <div id="search-results"></div>
+          </div>
+          <div id="format-actions">
+            <button id="format-json-button">Prettify JSON</button>
+            <button id="minify-json-button">Minify JSON</button>
+          </div>
+          <div id="manipulation-actions">
+            {/* <!-- Add manipulation controls here later --> */}
+          </div>
+          <div id="jsonata-playground">
+            <div id="jsonata">
+              <textarea id="jsonata-expression">webapp</textarea>
+              <button id="jsonata-evaluate-btn">Evaluate</button>
+              <pre id="jsonata-result"></pre>
+            </div>
           </div>
         </div>
 				<script nonce="${nonce}" src="${mainJsUri}"></script>
