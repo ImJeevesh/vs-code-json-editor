@@ -63,6 +63,16 @@
           "light": "icons/material/light/content_copy.svg",
           "dark": "icons/material/light/content_copy.svg"
         }
+      },
+      {
+        "command": "code-json-editor.formatJsonDocument",
+        "title": "Format JSON Document (CJE)",
+        "category": "Code JSON Editor"
+      },
+      {
+        "command": "code-json-editor.minifyJsonDocument",
+        "title": "Minify JSON Document (CJE)",
+        "category": "Code JSON Editor"
       }
     ],
     "views": {
@@ -116,6 +126,18 @@
         {
           "command": "code-json-editor.copy-path-to-clipboard",
           "when": "view == code-json-editor"
+        }
+      ],
+      "editor/context": [
+        {
+          "when": "resourceLangId == json || resourceLangId == jsonc",
+          "command": "code-json-editor.formatJsonDocument",
+          "group": "1_modification@10"
+        },
+        {
+          "when": "resourceLangId == json || resourceLangId == jsonc",
+          "command": "code-json-editor.minifyJsonDocument",
+          "group": "1_modification@20"
         }
       ]
     }
